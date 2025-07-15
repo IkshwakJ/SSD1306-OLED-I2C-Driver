@@ -15,6 +15,14 @@ extern "C" {
 #endif
 
 /**
+ * @brief Ensure that only one of the following three defines are uncommented. 
+ *        This is to select which platform to use the driver on.
+ */
+// #define SSD1306_USE_STM32
+// #define SSD1306_USE_ESP_ARDUINO
+// #define SSD1306_USE_ESP_IDF
+
+/**
  * @brief Platform-specific context for SSD1306 driver
  *
  * Members are only valid under the matching macro:
@@ -32,6 +40,12 @@ typedef struct {
     TwoWire          *wire;     /**< Arduino Wire instance */
     uint8_t          i2c_addr; /**< 7‑bit I2C address */
 #endif
+
+#ifdef SSD1306_USE_ESP_IDF
+    i2c_port_t        i2c_port; /**< ESP-IDF I2C port number */
+    uint8_t           i2c_addr; /**< 7‑bit I2C address */
+#endif
+
 } ssd1306_platform_t;
 
 /**
@@ -45,16 +59,20 @@ void ssd1306_platform_init(
                                 DMA_HandleTypeDef *hdma_tx,
                             #endif
                             #ifdef SSD1306_USE_ESP_ARDUINO
-                                TwoWire          *wire,
+                                TwoWire *wire,
                             #endif
-                            uint16_t addr
+                            #ifdef SSD1306_USE_ESP_IDF
+                                i2c_port_t i2c_port,
+                            #endif
+                            uint8_t addr
                             );
 
 bool ssd1306_platform_write_command(uint8_t cmd);
-bool ssd1306_platform_write_multi_command(uint8_t *cmd, uint16_t size);
+bool ssd1306_platform_write_multi_command(const uint8_t *cmd, uint16_t size);
 bool ssd1306_platform_write_data(const uint8_t *data, uint16_t size);
 bool ssd1306_platform_start_data_dma(const uint8_t *data, uint16_t size);
 bool ssd1306_platform_is_dma_done();
+bool ssd1306_platform_delay_us(uint32_t us);
 
 #ifdef __cplusplus
 }

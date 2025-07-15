@@ -9,6 +9,7 @@
 #include "stdbool.h"
 #include "stdint.h"
 #include "ssd1306_fonts.h"
+#include "ssd1306_platform.h"
 #include "math.h"
 
 // Core functions.
@@ -161,7 +162,7 @@ bool ssd1306_DisplayOn(void);
  * @brief  Turns off the display without changing anything else, including the GDDRAM.
  * @retval true if the display has been turned off, false otherwise. 
  */
-bool ssd1306_DisplayOFF(void);
+bool ssd1306_DisplayOff(void);
 
 /**
  * @brief  Sets the display setting to invert the display colors or to make it default. 
