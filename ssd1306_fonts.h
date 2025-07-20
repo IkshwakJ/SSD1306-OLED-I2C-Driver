@@ -15,4 +15,10 @@ typedef struct {
     uint8_t        height;
 } FontDef;
 
+/**
+ * @brief Classic 5×8 font covering ASCII 32–127.
+ */
+extern const FontDef Font_5x8;
+
+
 #endif // SSD1306_FONTS_H

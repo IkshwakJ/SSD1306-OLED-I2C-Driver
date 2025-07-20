@@ -126,7 +126,7 @@ static bool InPoly(uint8_t* x0, uint8_t* y0, uint16_t point_count, int16_t* x, i
             vx2 = x[k]; vy2 = y[k];
 
             if ((vy1 <= py && py < vy2) || (vy2 <= py && py < vy1)) {
-                int8_t orient = Orientation(px, py, vx1, vy1, vx2, vy2);
+                int8_t orient = IsAntiClockwise(px, py, vx1, vy1, vx2, vy2);
                 if (orient > 0) cnt++;
                 else if (orient < 0) cnt--;
                 else {
@@ -288,13 +288,22 @@ bool ssd1306_Clear(void){
 }
 
 bool ssd1306_UpdateScreen(void){
+
+    if(!frame_is_free){
+        return false;
+    }
+    frame_is_free = false;
     // set page and column addresses to full screen
     if (!ssd1306_SetMemoryAddressingMode(0x00)) return false;
     if (!ssd1306_SetColumnAddress(0, SSD1306_WIDTH - 1)) return false;
     if (!ssd1306_SetPageAddress(0, (SSD1306_HEIGHT/8) - 1)) return false;
 
     // send all buffer via DMA or blocking
-    return ssd1306_platform_start_data_dma(buffer, SSD1306_BUFFER_SIZE);
+    if(ssd1306_platform_start_data_dma(buffer, SSD1306_BUFFER_SIZE)){
+        frame_is_free = true;
+        return true;
+    }
+    return false;
 }
 
 bool ssd1306_SetMemoryAddressingMode(uint8_t mode){
@@ -467,11 +476,31 @@ bool ssd1306_WriteChar(int16_t x, int16_t y, char ch, FontDef font, bool color) 
 }
 
 bool ssd1306_WriteString(int16_t x, int16_t y, const char* str, uint8_t len, FontDef font, bool color) {
+    const int16_t max_x       = SSD1306_WIDTH;
+    const int16_t max_y       = SSD1306_HEIGHT;
+    const int16_t line_height = font.height + 1;  // 1px spacing between lines
+
     for (uint8_t i = 0; i < len; i++) {
-        if (!ssd1306_WriteChar(x, y, str[i], font, color))
+        // Wrap to next line if this glyph would exceed right edge
+        if (x + font.width > max_x) {
+            x = 0;                 // back to left margin
+            y += line_height;      // down by one line
+
+            // If we’ve exceeded the bottom edge, stop drawing
+            if (y + font.height > max_y) {
+                return false;
+            }
+        }
+
+        // Draw the character; bail out if WriteChar fails
+        if (!ssd1306_WriteChar(x, y, str[i], font, color)) {
             return false;
+        }
+
+        // Advance cursor
         x += font.width;
     }
+
     return true;
 }
 
