@@ -20,5 +20,3 @@ A lightweight, fully‑featured C driver for the SSD1306 128×64 monochrome OLED
 - **Double‑buffered frame buffer**  
   - 128×64 px local RAM mirror  
   - Single bulk update to SSD1306 GDDRAM
-
-## Repository Structure
